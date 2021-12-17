@@ -244,6 +244,11 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"task_role_arn": {
@@ -691,6 +696,11 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining ECS Task Definition Revision %q", d.Id())
+		return nil
+	}
+
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
